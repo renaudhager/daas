@@ -71,8 +71,8 @@ Vagrant.configure(2) do |config|
         echo '172.16.10.10    daas.vagrant.lan' >>/etc/hosts;
         ipaddr=`ip a s eth1 | grep inet | grep -v inet6 | awk '{print $2}' | cut -f 1 -d '/'`;
         mac=`ip a s eth1 | grep link/ether | awk '{print $2}'`;
-        token=`curl -s -X POST http://daas.vagrant.lan/register?fqdn=client01.vagrant.lan`;
-        curl -s -X POST \"http://daas.vagrant.lan/create?fqdn=client01.vagrant.lan&ip=${ipaddr}&mac=${mac}&token=${token}\"
+        token=`curl -s -X POST http://daas.vagrant.lan/v1/register?fqdn=client01.vagrant.lan`;
+        curl -s -X POST \"http://daas.vagrant.lan/v1/create?fqdn=client01.vagrant.lan&ip=${ipaddr}&mac=${mac}&token=${token}\"
         "
     end
 
