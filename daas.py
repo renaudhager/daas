@@ -322,19 +322,4 @@ def delete():
 
 
 if __name__ == '__main__':
-
     daas.run(debug=True)
-
-    # # Loading conf
-    # conf = load_conf(conf_file)
-    # if conf is not None:
-    #     print "Configuration from %s has been correctly loaded." % conf_file
-    #
-    #     # Creating consul object
-    #     consul_client = consul.Consul(host=conf['consul']['host'], port=conf['consul']['port'], scheme=conf['consul']['scheme'])
-    #     # Starting app
-    #     daas.run(debug=True)
-    #     # daas.run()
-    #
-    # else:
-    #     print "Error during configuration loading. Check your config file : %s" % conf_file
