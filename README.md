@@ -53,4 +53,4 @@ See requirements.txt
 
 ## Limitations
 * Right now the OMAPI configuration (port, key, secret) need to be the same on DHCP servers.
-* Only on KV is supported.
+* Only 1 KV is supported.
