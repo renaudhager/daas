@@ -1,0 +1,79 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Defaults for config options defined in CONFIG
+
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure(2) do |config|
+  # The most common configuration options are documented and commented below.
+  # For a complete reference, please see the online documentation at
+  # https://docs.vagrantup.com.
+
+  # Every Vagrant development environment requires a box. You can search for
+  # boxes at https://atlas.hashicorp.com/search.
+  #config.vm.box = "ubuntu/xenial64"
+  config.vm.box = "centos/7"
+  config.vm.box_check_update = false
+
+  # dhcp server
+   config.vm.define "dhcp-server" do |dhcp|
+      config.vm.box = "centos/7"
+       dhcp.vm.hostname = "dhcp-server"
+       dhcp.vm.network :private_network, ip: "172.16.10.10", virtualbox__intnet: "dhcp_network"
+       dhcp.vm.network "forwarded_port", guest: 8500, host: 8500
+
+       dhcp.vm.provider :virtualbox do |vb|
+         vb.memory = 1024
+         vb.cpus = 1
+       end
+
+       config.vm.provision "file", source: "../daas.conf", destination: "daas.conf"
+       config.vm.provision "file", source: "../daas.py", destination: "daas.py"
+       config.vm.provision "file", source: "../requirements.txt", destination: "requirements.txt"
+
+       config.vm.provision "shell", inline: "
+         /sbin/setenforce 0;
+         yum install -y epel-release.noarch;
+         yum install -y unzip dhcp python2-pip httpd mod_wsgi;
+         pip install -r /home/vagrant/requirements.txt;
+         mv /home/vagrant/daas.conf /etc/daas.conf;
+         mkdir -p /var/www/daas_app;
+         cp /home/vagrant/daas.py /var/www/daas_app/daas_app.py;
+         cp /vagrant/httpd/daas.wsgi /var/www/daas_app/;
+         cp /vagrant/httpd/daas_app.conf /etc/httpd/conf.d/;
+         curl -o consul.zip  https://releases.hashicorp.com/consul/0.8.3/consul_0.8.3_linux_amd64.zip?_ga=2.187728480.996410174.1496849056-819522633.1487179960;
+         unzip consul.zip && mv consul /usr/local/bin;
+         cp /vagrant/dhcp/dhcpd.conf /etc/dhcp/;
+         #cp /vagrant/daas_app.service /etc/systemd/system/multi-user.target.wants/;
+         cp /vagrant/consul/consul.service /etc/systemd/system/multi-user.target.wants/;
+         cp /vagrant/consul/consul.conf /etc/consul.conf;
+         systemctl daemon-reload && systemctl start consul && systemctl restart httpd && systemctl restart dhcpd;
+         #systemctl daemon-reload && systemctl start consul && systemctl start daas_app && systemctl restart dhcpd;
+         "
+
+   end
+
+   # dhcp client
+    config.vm.define "client01" do |dhcp01|
+       config.vm.box = "centos/7"
+        dhcp01.vm.hostname = "client01"
+        dhcp01.vm.network :private_network, type: "dhcp", virtualbox__intnet: "dhcp_network"
+
+        dhcp01.vm.provider :virtualbox do |vb|
+          vb.memory = 1024
+          vb.cpus = 1
+        end
+        config.vm.provision "shell", inline: "
+        echo '172.16.10.10    daas.vagrant.lan' >>/etc/hosts;
+        ipaddr=`ip a s eth1 | grep inet | grep -v inet6 | awk '{print $2}' | cut -f 1 -d '/'`;
+        mac=`ip a s eth1 | grep link/ether | awk '{print $2}'`;
+        token=`curl -s -X POST http://daas.vagrant.lan/register?fqdn=client01.vagrant.lan`;
+        curl -s -X POST \"http://daas.vagrant.lan/create?fqdn=client01.vagrant.lan&ip=${ipaddr}&mac=${mac}&token=${token}\"
+        "
+    end
+
+end

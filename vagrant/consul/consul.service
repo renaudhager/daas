@@ -1,0 +1,18 @@
+[Unit]
+Description=Consul Agent
+Wants=basic.target
+After=basic.target network.target
+
+[Service]
+User=root
+Group=root
+ExecStart=/usr/local/bin/consul agent \
+  -config-file /etc/consul.conf -ui
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=always
+RestartSec=42s
+LimitNOFILE=131072
+
+[Install]
+WantedBy=multi-user.target
