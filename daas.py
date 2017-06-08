@@ -17,7 +17,7 @@ conf_file = '/etc/daas.conf'
 ###################
 
 
-def validate_token(token, fqdn):
+def validate_token_v1(token, fqdn):
     """
     Function to authenticate request.
     @fqdn: fqdn associate to the token
@@ -47,7 +47,7 @@ def validate_token(token, fqdn):
         return False
 
 
-def create_lease(ip, mac, fqdn):
+def create_lease_v1(ip, mac, fqdn):
     """
     Function to create leases of a specificied MAC and IP.
     @fqdn: fqdn to set in the lease.
@@ -71,7 +71,7 @@ def create_lease(ip, mac, fqdn):
         return 404
 
 
-def lookup_lease(fqdn):
+def lookup_lease_v1(fqdn):
     """
     Function to lookup leases of a specificied fqdn.
     Use response.dump() to dump response message.
@@ -108,7 +108,7 @@ def lookup_lease(fqdn):
         return None
 
 
-def delete_lease(mac, fqdn):
+def delete_lease_v1(mac, fqdn):
     """
     Function to delete leases of a specificied MAC @.
     @fqdn: fqdn use to find which dhcp server need to be reached.
@@ -186,16 +186,16 @@ def consul_client(conf):
 #####################
 
 
-@daas.route('/')
-def index():
+@daas.route('/v1/')
+def index_v1():
     """
     Default API route.
     """
     return "Nothing to see here. ", 404
 
 
-@daas.route('/configuration', methods=['GET'])
-def configuration():
+@daas.route('/v1/configuration', methods=['GET'])
+def configuration_v1():
     """
     Print conf
     """
@@ -203,8 +203,8 @@ def configuration():
     return json.dumps(conf)
 
 
-@daas.route('/register', methods=['POST'])
-def register():
+@daas.route('/v1/register', methods=['POST'])
+def register_v1():
     """
     API route to register a box into KV.
     @fqdn: fqdn to register.
@@ -225,8 +225,8 @@ def register():
         return "Error while creating the key in Consul", 500
 
 
-@daas.route('/unregister', methods=['POST'])
-def unregister():
+@daas.route('/v1/unregister', methods=['POST'])
+def unregister_v1():
     """
     API route to register a box into KV.
     @fqdn: fqdn to register.
@@ -241,7 +241,7 @@ def unregister():
 
     key = conf['consul']['prefix'] + 'registered/' + fqdn + '/token'
 
-    if validate_token(token, fqdn):
+    if validate_token_v1(token, fqdn):
         try:
             consul.kv.delete(key)
             return fqdn + " has been unregistered.", 200
@@ -252,8 +252,8 @@ def unregister():
         return "Unauthorized", 401
 
 
-@daas.route('/lookup', methods=['GET'])
-def lookup():
+@daas.route('/v1/lookup', methods=['GET'])
+def lookup_v1():
     """
     API route to get mac for specificied fqdn.
     @fqdn: fqdn to lookup.
@@ -261,15 +261,15 @@ def lookup():
 
     fqdn = request.args.get('fqdn')
 
-    mac = lookup_lease(fqdn)
+    mac = lookup_lease_v1(fqdn)
     if mac is not None:
         return "Lease existing for " + fqdn + " with mac " + mac + "."
     else:
         return "Lease not found.", 404
 
 
-@daas.route('/create', methods=['POST'])
-def create():
+@daas.route('/v1/create', methods=['POST'])
+def create_v1():
     """
     API route to create DHCP leases.
     @fqdn: fqdn to set in the lease.
@@ -283,11 +283,11 @@ def create():
     mac = request.args.get('mac')
     token = request.args.get('token')
 
-    if validate_token(token, fqdn):
+    if validate_token_v1(token, fqdn):
         # Checking that there is no existing lease
-        mac2 = lookup_lease(fqdn)
+        mac2 = lookup_lease_v1(fqdn)
         if mac2 is None:
-            return_code = create_lease(ip, mac, fqdn)
+            return_code = create_lease_v1(ip, mac, fqdn)
             if return_code == 201:
                 return "Lease created for " + ip + " and mac " + mac + ".", 201
             else:
@@ -298,8 +298,8 @@ def create():
         return "Unauthorized", 401
 
 
-@daas.route('/delete', methods=['POST'])
-def delete():
+@daas.route('/v1/delete', methods=['POST'])
+def delete_v1():
     """
     API route to delete DHCP leases.
     @fqdn: fqdn use to find lease that need to be deleted.
@@ -309,10 +309,10 @@ def delete():
     fqdn = request.args.get('fqdn')
     token = request.args.get('token')
 
-    mac = lookup_lease(fqdn)
-    if validate_token(token, fqdn):
+    mac = lookup_lease_v1(fqdn)
+    if validate_token_v1(token, fqdn):
         if mac is not None:
-            return_code = delete_lease(mac, fqdn)
+            return_code = delete_lease_v1(mac, fqdn)
             if return_code == 200:
                 return "deleting lease for mac " + mac + ".", 200
             else:
