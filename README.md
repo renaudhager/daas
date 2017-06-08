@@ -51,6 +51,14 @@ curl -X GET "http://daas.vagrant.lan/lookup?fqdn=test01.vagrant.lan"
 ## Requirements
 See requirements.txt
 
+## Demo
+There is a demo available using vagrant.
+
+Go to the vagrant folder, start dhcp-server, wait for the VM to be up then start client01.
+```
+vagrant up dhcp-server && sleep 30 && vagrant up client01
+```
+
 ## Limitations
 * Right now the OMAPI configuration (port, key, secret) need to be the same on DHCP servers.
 * Only 1 KV is supported.
