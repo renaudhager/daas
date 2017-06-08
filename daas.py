@@ -174,6 +174,8 @@ def get_domain(fqdn):
 
 def consul_client(conf):
     """
+    Create consul object.
+    @conf: dict containing configuration.
     """
 
     return consul.Consul(host=conf['consul']['host'], port=conf['consul']['port'], scheme=conf['consul']['scheme'])
